@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>16 Player Grid with Real-Time Chat</title>
+<style>
+    body {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background: #1e1e2f;
+        font-family: sans-serif;
+        color: #fff;
+    }
+    .grid-container {
+        display: grid;
+        grid-template-columns: repeat(4, 120px);
+        grid-template-rows: repeat(4, 120px);
+        gap: 15px;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        box-shadow: 0 0 30px rgba(0,0,0,0.5);
+        margin-bottom: 20px;
+    }
+    .player-box {
+        width: 120px;
+        height: 120px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 15px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 24px;
+        cursor: default;
+    }
+    .chat-container {
+        width: 520px;
+        display: flex;
+        flex-direction: column;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+        padding: 10px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    }
+    .chat-messages {
+        height: 200px;
+        overflow-y: auto;
+        margin-bottom: 10px;
+        padding: 5px;
+        background: rgba(0,0,0,0.1);
+        border-radius: 10px;
+    }
+    .chat-input {
+        display: flex;
+    }
+    .chat-input input {
+        flex: 1;
+        padding: 8px;
+        border-radius: 10px 0 0 10px;
+        border: none;
+        outline: none;
+    }
+    .chat-input button {
+        padding: 8px 15px;
+        border: none;
+        border-radius: 0 10px 10px 0;
+        background: #4a4add;
+        color: white;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+    .chat-input button:hover {
+        background: #6a6aff;
+    }
+</style>
+</head>
+<body>
+<div class="grid-container" id="grid"></div>
+
+<div class="chat-container">
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-input">
+        <input type="text" id="chatInput" placeholder="Type a message..." />
+        <button onclick="sendMessage()">Send</button>
+    </div>
+</div>
+
+<script>
+    const grid = document.getElementById('grid');
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+
+    // Fill grid with empty player boxes
+    for (let i = 1; i <= 16; i++) {
+        const box = document.createElement('div');
+        box.className = 'player-box';
+        box.textContent = `Player ${i}`;
+        grid.appendChild(box);
+    }
+
+    // Connect to WebSocket server
+    const socket = new WebSocket('ws://localhost:8080'); // Replace with your WebSocket server URL
+
+    socket.onopen = () => {
+        console.log('Connected to chat server');
+    };
+
+    socket.onmessage = (event) => {
+        const msgDiv = document.createElement('div');
+        msgDiv.textContent = event.data;
+        chatMessages.appendChild(msgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    };
+
+    socket.onerror = (err) => console.error('WebSocket error:', err);
+
+    function sendMessage() {
+        const message = chatInput.value.trim();
+        if (!message || socket.readyState !== WebSocket.OPEN) return;
+
+        // Send message through WebSocket
+        socket.send(message);
+
+        // Display locally
+        const msgDiv = document.createElement('div');
+        msgDiv.textContent = `You: ${message}`;
+        chatMessages.appendChild(msgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        chatInput.value = '';
+    }
+</script>
+</body>
+</html>
