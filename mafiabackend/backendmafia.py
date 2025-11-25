@@ -23,7 +23,10 @@ class ConnectionManager:
             await connection.send_text(message)
 
 manager = ConnectionManager()
-
+@app.get("/")
+def root():
+    return {"status": "running"}
+    
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
@@ -35,3 +38,4 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
         await manager.broadcast("A player disconnected")
+
